@@ -1,0 +1,473 @@
+version: "3.8"
+
+networks:
+  elasticsearch-backend:
+    driver: overlay
+  elasticsearch-frontend:
+    driver: overlay
+
+services:
+  es01:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es01
+      - cluster.name=swarm-cluster
+      - node.roles=master
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es02,es03,es04,es05,es06,es07,es08,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == manager
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es02:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es02
+      - cluster.name=swarm-cluster
+      - node.roles=master
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es03,es04,es05,es06,es07,es08,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata02:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == worker1
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es03:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es03
+      - cluster.name=swarm-cluster
+      - node.roles=master
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es04,es05,es06,es07,es08,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata03:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == worker2
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es04:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es04
+      - cluster.name=swarm-cluster
+      - node.roles=data
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03,es05,es06,es07,es08,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata04:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == manager
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es05:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es05
+      - cluster.name=swarm-cluster
+      - node.roles=data
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03,es04,es06,es07,es08,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata05:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == worker1
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es06:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es06
+      - cluster.name=swarm-cluster
+      - node.roles=data
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03,es04,es05,es07,es08,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata06:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == worker2
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es07:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es07
+      - cluster.name=swarm-cluster
+      - node.roles=data
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03,es04,es05,es06,es08,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata07:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == manager
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es08:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es08
+      - cluster.name=swarm-cluster
+      - node.roles=data
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03,es04,es05,es06,es07,es09
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata08:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == worker1
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  es09:
+    image: elasticsearch:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - node.name=es09
+      - cluster.name=swarm-cluster
+      - node.roles=data
+      - network.host=0.0.0.0
+      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=es01,es02,es03,es04,es05,es06,es07,es08
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.use_auto_machine_memory_percent=true
+    volumes:
+      - esdata09:/usr/share/elasticsearch/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.es.rule=PathPrefix(`/es`)"
+        - "traefik.http.services.es.loadbalancer.server.port=9200"
+        - "traefik.http.routers.es.middlewares=strip-es-prefix"
+        - "traefik.http.middlewares.strip-es-prefix.stripprefix.prefixes=/es"
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 32g
+      placement:
+        constraints:
+          - node.labels.role == worker2
+      endpoint_mode: dnsrr
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 | grep -q 'You Know, for Search' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  traefik:
+    image: traefik:v2.10
+    networks:
+      - elasticsearch-frontend
+      - elasticsearch-backend
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.network=elasticsearch-backend"
+      - "--providers.docker.swarmMode=true"
+      - "--entrypoints.web.address=:80"
+    labels:
+      - "traefik.http.routers.dashboard.rule=PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.dashboard.entrypoints=dashboard"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.labels.role == manager
+
+  kibana:
+    image: kibana:8.14.3
+    networks:
+      - elasticsearch-backend
+    environment:
+      - SERVER_NAME=kibana
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
+      - ELASTICSEARCH_HOSTS=["http://es01:9200","http://es02:9200","http://es03:9200","http://es04:9200","http://es05:9200","http://es06:9200","http://es07:9200","http://es08:9200","http://es09:9200"]
+      - XPACK_SECURITY_ENABLED=false
+    depends_on:
+      - es01
+      - es02
+      - es03
+      - es04
+      - es05
+      - es06
+      - es07
+      - es08
+      - es09
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.kibana.rule=PathPrefix(`/kibana`)"
+        - "traefik.http.routers.kibana.entrypoints=web"
+#        - "traefik.http.routers.kibana.middlewares=strip-kibana-prefix"
+#        - "traefik.http.middlewares.strip-kibana-prefix.stripprefix.prefixes=/kibana"
+        - "traefik.http.services.kibana.loadbalancer.server.port=5601"
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role == manager
+volumes:
+  esdata01:
+  esdata02:
+  esdata03:
+  esdata04:
+  esdata05:
+  esdata06:
+  esdata07:
+  esdata08:
+  esdata09:
