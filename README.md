@@ -25,5 +25,4 @@ This project took a lot of time, effort, and coffee to get just right. If you've
 
 Your support would mean the world to me! Thank you for helping me continue working on amazing projects like this. 🙌💻
 
-<script src="https://liberapay.com/swarmhunter/widgets/button.js"></script>
 <noscript><a href="https://liberapay.com/swarmhunter/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a></noscript>
